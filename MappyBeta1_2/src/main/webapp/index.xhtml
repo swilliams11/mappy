@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" 
+    xmlns:h="http://java.sun.com/jsf/html" 
+    xmlns:f="http://java.sun.com/jsf/core" 
+    xmlns:p="http://primefaces.org/ui"> 
+ 
+    <h:head> 
+ 
+    </h:head> 
+      
+    <h:body> 
+       <h:form> 
+           <p:panel header="Keyboard Demo">   
+               <p:keyboard value="#{keyboardBean.value}"/> 
+             </p:panel>
+             <p:commandButton value="Submit"/>
+        	<!-- <h:commandLink value="map view." action="page2" /> -->   
+        	  <h:outputLink value="map.xhtml">map view </h:outputLink>
+             <!-- <h:outputText value="#{bundle.Book201}"/>-->
+       </h:form>
+        
+    </h:body> 
+</html>
