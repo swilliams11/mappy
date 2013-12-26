@@ -9,6 +9,11 @@
 	<url>http://maven.apache.org</url>
 	<dependencies>
 		<dependency>
+			<groupId>javax.json</groupId>
+			<artifactId>javax.json-api</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>3.8.1</version>
@@ -20,9 +25,16 @@
 			<artifactId>primefaces</artifactId>
 			<version>4.0</version>
 		</dependency>
-		<!-- <dependency> <groupId>javax</groupId> <artifactId>javaee-api</artifactId> 
-			<version>7.0</version> </dependency> -->
-
+		<dependency>
+			<groupId>javax</groupId>
+			<artifactId>javaee-api</artifactId>
+			<version>7.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish</groupId>
+			<artifactId>javax.json</artifactId>
+			<version>1.0.2</version>
+		</dependency>
 		<!-- JSF 2 API <dependency> <groupId>com.sun.faces</groupId> <artifactId>jsf-api</artifactId> 
 			<version>2.2.0-m07</version> </dependency> -->
 		<dependency>
@@ -41,6 +53,7 @@
 		</repository>
 	</repositories>
 	<build>
+		<!-- <sourceDirectory>../src/main/resources</sourceDirectory> -->
 		<finalName>MappyBeta1_2</finalName>
 		<plugins>
 			<plugin>
@@ -48,7 +61,7 @@
 				<artifactId>tomcat7-maven-plugin</artifactId>
 				<version>2.2</version>
 				<configuration>
-					<url>http://localhost:8185/manager/html</url>
+					<url>http://localhost:8185/manager/text</url>
 					<server>TomcatServer7</server>
 					<path>/MappyBeta1_2</path>
 				</configuration>
@@ -60,11 +73,17 @@
 			<!-- Maven compiler plugin -->
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
 				<configuration>
+					<!-- <includes> <include>**/core/**</include> <include>**/com/**</include> 
+						</includes> -->
 					<source>1.7</source>
 					<target>1.7</target>
 				</configuration>
 			</plugin>
+			<!--<plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-war-plugin</artifactId> 
+				<version>2.4</version> <configuration> <webappDirectory>/sample/servlet/container/deploy/directory</webappDirectory> 
+				<archiveClasses>false</archiveClasses> </configuration> </plugin> -->
 		</plugins>
 	</build>
 </project>
