@@ -13,11 +13,17 @@ import java.util.logging.Logger;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 
+import org.primefaces.event.map.OverlaySelectEvent;
 import org.primefaces.event.map.PointSelectEvent;
 import org.primefaces.event.map.StateChangeEvent;
 import org.primefaces.model.map.DefaultMapModel;
 import org.primefaces.model.map.LatLng;
 import org.primefaces.model.map.LatLngBounds;
+import org.primefaces.model.map.MapModel;
+import org.primefaces.model.map.Marker;
+
+import com.mappy.parsers.TeamJsonParser;
+import com.mappy.Team;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
@@ -34,10 +40,12 @@ import javax.json.JsonValue.ValueType;
 // @Named
 @SessionScoped
 public class MapBean implements Serializable {
-	private static final Logger log = Logger.getLogger(MapBean.class.getName()); 
-	//static Logger log = Logger.getLogger("MapBean");
-	static String urltext = "http://api.espn.com/v1/sports/basketball/nba/teams?apikey=kvv565tntjd2j67y3fr9c4xt";
-	static ArrayList<String> tms;
+	private MapModel advancedModel;
+	private Marker marker;
+	private static final Logger log = Logger.getLogger(MapBean.class.getName());
+	// static Logger log = Logger.getLogger("MapBean");
+	static String urltext = "http://api.espn.com/v1/sports/basketball/nba/teams?apikey=kvv565tntjd2j67y3fr9c4xt&enable=venues";
+	static ArrayList<Team> tms;
 
 	public MapBean() {
 		try {
@@ -45,7 +53,8 @@ public class MapBean implements Serializable {
 			URLConnection url = openURL(urltext);
 			log.info("URL opened..");
 			readResponse(url);
-			log.info("Read Response");
+			log.info("successfully read the response..");
+			populateMap();
 		} catch (MalformedURLException e) {
 			log.log(Level.SEVERE, "Invalid URI", urltext);
 			addMessage(new FacesMessage(FacesMessage.SEVERITY_INFO,
@@ -65,55 +74,86 @@ public class MapBean implements Serializable {
 	}
 
 	public static void readResponse(URLConnection url) {
-		// URL url = new
-		// URL("https://graph.facebook.com/search?q=java&type=post");
 		try (InputStream is = url.getInputStream();
 				JsonReader rdr = Json.createReader(is)) {
 			log.info("Opened input stream...");
-			tms = parseTeamsJson(rdr);
-			log.info("parsed Teams...");
-			
-			/*
-			 * JsonObject obj = rdr.readObject(); JsonArray results =
-			 * obj.getJsonArray("data"); for (JsonObject result :
-			 * results.getValuesAs(JsonObject.class)) { System.out
-			 * .print(result.getJsonObject("from").getString("name"));
-			 * System.out.print(": ");
-			 * System.out.println(result.getString("message", ""));
-			 * System.out.println("-----------"); }
-			 */
+			tms = new TeamJsonParser(rdr).parse();
+			log.info("parsed Teams..." + tms);
 		} catch (Exception e) {
 			log.log(Level.SEVERE, "Error reading the JSON.");
 		}
 	}
 
-	public static ArrayList<String> parseTeamsJson(JsonReader rdr) {
-		JsonObject jsonobj = rdr.readObject();
-		log.info("Read the first object");
-		JsonArray teamsarray = jsonobj.getJsonArray("sports").getJsonObject(0)
-				.getJsonArray("leagues").getJsonObject(0)
-				.getJsonArray("teams");
-		log.info("got the teams array...");
-		JsonObject obj = null;
-		ArrayList<String> list = new ArrayList<>();
-		log.info("Populate the arrays list...");
-		for (JsonValue team : teamsarray) {
-			if (team.getValueType() == ValueType.OBJECT) {				
-				obj = (JsonObject) team;
-				log.info("got an object - " + obj);
-				JsonString jsonstring = obj.getJsonString("location");
-				list.add(jsonstring.getString());
-			}
-		}
-		log.info("populated the arrays list");
-		return list;
+	public void populateMap() {
+		log.info("entered populateMap()");
+		advancedModel = new DefaultMapModel();
+		createMarkersAndCoordinates();
+		log.info("exiting populateMap()");
+		
+		 //Shared coordinates 
+		  /*LatLng coord1 = new LatLng(36.879466,
+		  30.667648); LatLng coord2 = new LatLng(36.883707, 30.689216); LatLng
+		  coord3 = new LatLng(36.879703, 30.706707); LatLng coord4 = new
+		  LatLng(36.885233, 30.702323);*/
+		  
+		 //Icons and Data 
+		  /*advancedModel.addOverlay(new Marker(coord1,
+		  "Konyaalti", "konyaalti.png",
+		  "http://maps.google.com/mapfiles/ms/micons/blue-dot.png"));
+		  advancedModel.addOverlay(new Marker(coord2, "Ataturk Parki",
+		  "ataturkparki.png")); advancedModel.addOverlay(new Marker(coord4,
+		  "Kaleici", "kaleici.png",
+		  "http://maps.google.com/mapfiles/ms/micons/pink-dot.png"));
+		  advancedModel.addOverlay(new Marker(coord3, "Karaalioglu Parki",
+		  "karaalioglu.png",
+		  "http://maps.google.com/mapfiles/ms/micons/yellow-dot.png"));
+	*/	 
 	}
 
+	private void createMarkersAndCoordinates() {
+		log.info("entered createMarkersAndCoordinates()");
+		Venue venue = null;
+		LatLng coord1 = null;
+		
+		for (Team team : tms) {
+			log.info("get team: " + team.getName() + "; team logo: " + team.getLogo());
+			venue = team.getVenue();
+			log.info("get team: " + venue.getName() + "; latitude: " 
+					+ venue.getGeolocation().getLatitude() + "; longitude: " 
+					+ venue.getGeolocation().getLongitude() );
+			coord1 = new LatLng(venue.getGeolocation().getLatitude(), 
+						venue.getGeolocation().getLongitude());
+			advancedModel.addOverlay(
+					new Marker(coord1, 
+							team.getLogo(),
+							team.getLogo(),
+							"http://maps.google.com/mapfiles/ms/micons/blue-dot.png"));
+			//"http://maps.google.com/mapfiles/ms/micons/blue-dot.png"
+		}
+		log.info("exiting createMarkersAndCoordinates()");
+	}
+
+	/*
+	 * public static ArrayList<String> parseTeamsJson(JsonReader rdr) {
+	 * JsonObject jsonobj = rdr.readObject(); log.info("Read the first object");
+	 * JsonArray teamsarray = jsonobj.getJsonArray("sports").getJsonObject(0)
+	 * .getJsonArray("leagues").getJsonObject(0) .getJsonArray("teams");
+	 * log.info("got the teams array..."); return getTeamsLocations(teamsarray);
+	 * }
+	 * 
+	 * 
+	 * public static ArrayList<String> getTeamsLocations(JsonArray teamsarray){
+	 * ArrayList<String> list = new ArrayList<>(); JsonObject obj = null; for
+	 * (JsonValue team : teamsarray) { if (team.getValueType() ==
+	 * ValueType.OBJECT) { obj = (JsonObject) team; log.info("got an object - "
+	 * + obj); JsonString jsonstring = obj.getJsonString("location");
+	 * list.add(jsonstring.getString()); } } return list; }
+	 */
 	public void onStateChange(StateChangeEvent event) {
 		LatLngBounds bounds = event.getBounds();
 		int zoomLevel = event.getZoomLevel();
-		addMessage(new FacesMessage(FacesMessage.SEVERITY_INFO, "Teams:",
-				tms.toString()));
+		/*addMessage(new FacesMessage(FacesMessage.SEVERITY_INFO, "Teams:",
+				tms.toString()));*/
 		addMessage(new FacesMessage(FacesMessage.SEVERITY_INFO, "Zoom Level",
 				String.valueOf(zoomLevel)));
 		addMessage(new FacesMessage(FacesMessage.SEVERITY_INFO, "Center", event
@@ -126,8 +166,8 @@ public class MapBean implements Serializable {
 
 	public void onPointSelect(PointSelectEvent event) {
 		LatLng latlng = event.getLatLng();
-		addMessage(new FacesMessage(FacesMessage.SEVERITY_INFO, "Teams:",
-				tms.toString()));
+		/*addMessage(new FacesMessage(FacesMessage.SEVERITY_INFO, "Teams:",
+				tms.toString()));*/
 		addMessage(new FacesMessage(FacesMessage.SEVERITY_INFO,
 				"Point Selected", "Lat:" + latlng.getLat() + ", Lng:"
 						+ latlng.getLng()));
@@ -136,4 +176,16 @@ public class MapBean implements Serializable {
 	public void addMessage(FacesMessage message) {
 		FacesContext.getCurrentInstance().addMessage(null, message);
 	}
+	
+	public void onMarkerSelect(OverlaySelectEvent event) {  
+        marker = (Marker) event.getOverlay();  
+    }  
+      
+	 public MapModel getAdvancedModel() {  
+	        return advancedModel;  
+	 }  
+	 
+    public Marker getMarker() {  
+        return marker;  
+    }  
 }

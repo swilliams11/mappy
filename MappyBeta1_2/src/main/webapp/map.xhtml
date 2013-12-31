@@ -15,12 +15,17 @@
   
     <p:growl id="messages" showDetail="true" life="2000" />  
   
-    <p:gmap center="41.381542, 2.122893" zoom="5" type="ROADMAP" style="width:600px;height:400px">  
-  
+    <p:gmap center="38.753, -100.721" zoom="4" type="ROADMAP" model="#{mapBean.advancedModel}" style="width:800px;height:600px">  
+  		<p:ajax event="overlaySelect" listener="#{mapBean.onMarkerSelect}" /> 
         <p:ajax event="stateChange" listener="#{mapBean.onStateChange}" update="messages" />  
         <p:ajax event="pointSelect" listener="#{mapBean.onPointSelect}" update="messages" />  
-  
+  		<p:gmapInfoWindow>  
+            <p:outputPanel style="text-align:center;display:block;margin:auto:">    
+                    <p:graphicImage value="#{mapBean.marker.data}" height="200" width="200"/>  
+                    <br/>  
+                    <h:outputText value="#{mapBean.marker.title}" />  
+            </p:outputPanel>    
+        </p:gmapInfoWindow>
     </p:gmap>  
-  
 </h:form>  
 </html>
